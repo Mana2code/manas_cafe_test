@@ -29,11 +29,6 @@ pipeline {
                   if [ -f requirements.txt ]; then
                     pip install -r requirements.txt
                   fi
-                  # Install browser binaries
-                    playwright install chromium
-
-                  # Install system dependencies for the browsers (requires root)
-                    playwright install-deps
 
                 '''
             }
@@ -72,6 +67,11 @@ pipeline {
                       fi
                       # Ensure pytest is installed
                       pip install pytest
+                      # Install browser binaries
+                      playwright install chromium
+
+                      # Install system dependencies for the browsers (requires root)
+                      playwright install-deps
                     '''
                 }
             }
