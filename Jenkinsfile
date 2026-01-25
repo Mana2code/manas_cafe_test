@@ -40,7 +40,7 @@ pipeline {
                 sh '''
                   export FLASK_APP=app.py
                   export FLASK_ENV=testing
-                  flask run --host=0.0.0.0 --port=5000 &
+                  flask run --host=0.0.0.0 --port=5001 &
                   echo $! > flask.pid
                   # Give it a few seconds to start
                   sleep 5
