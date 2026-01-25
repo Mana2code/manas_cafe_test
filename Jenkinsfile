@@ -2,7 +2,7 @@ pipeline {
     agent {
         docker {
             image 'python:3.13'
-            args '-u root:root'
+            args '-u' // unbuffered output
         }
     }
 
@@ -29,6 +29,12 @@ pipeline {
                   if [ -f requirements.txt ]; then
                     pip install -r requirements.txt
                   fi
+                  # Install browser binaries
+                    playwright install chromium
+
+                  # Install system dependencies for the browsers (requires root)
+                    playwright install-deps
+
                 '''
             }
         }
