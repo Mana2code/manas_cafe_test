@@ -36,14 +36,14 @@ def test_login_Page(page: Page):
     # Setup: Ensure the user exists for this specific test
     timestamp = int(time.time())
     username = f"login_user_{timestamp}"
-    page.goto("http://0.0.0.0")
+    page.goto("http://127.0.0.1:5001/")
     page.locator('input[name="username"]').fill(username)
     page.locator('input[name="password"]').fill("Testing@12")
     page.locator('input[name="confirm_password"]').fill("Testing@12")
     page.get_by_role("button", name="Register").click()
-
+    time.sleep(4)
     # Action: Perform Login
-    page.goto("http://0.0.0.0")
+    page.goto("http://127.0.0.1:5001/")
     page.locator('input[name="username"]').fill(username)
     page.locator('input[name="password"]').fill("Testing@12")
     page.get_by_role("button", name="Login").click()
