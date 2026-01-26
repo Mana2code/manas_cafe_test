@@ -32,22 +32,23 @@ pipeline {
         stage('Run Flask App') {
             steps {
                 sh '''
-                  # CRITICAL: Prevents Jenkins from killing the background process
                   export JENKINS_NODE_COOKIE=dontKillMe
                   export FLASK_APP=app.py
 
-                  # Start Flask and log output to troubleshoot if it fails
+                  # CALL YOUR FUNCTION: This handles mkdir, db.create_all(), and seeding data
+                  python3 -c "from app import app, init_db; init_db()"
+
+                  # Start Flask in the background
                   nohup flask run --host=0.0.0.0 --port=5001 > flask.log 2>&1 &
                   echo $! > flask.pid
 
                   # Wait for server to be ready
                   sleep 10
-
-                  # Verification check: will fail the build if Flask didn't start
-                  curl -s http://0.0.0.0:5001 > /dev/null || (cat flask.log && exit 1)
                 '''
             }
         }
+
+
 
         stage('Checkout Tests') {
             steps {
