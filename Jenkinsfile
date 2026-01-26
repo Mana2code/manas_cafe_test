@@ -79,7 +79,9 @@ pipeline {
                   # Removed the --css flag to prevent the OSError
                   pytest --junit-xml=../${REPORT_DIR}/junit.xml \
                          --html=../${REPORT_DIR}/report.html \
-                         --self-contained-html
+                         --self-contained-html \
+                         --screenshot=only-on-failure \
+                         --output=../${REPORT_DIR}/test-results
                 '''
             }
         }
