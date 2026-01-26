@@ -22,7 +22,8 @@ def test_resgisterButton_present(page:Page):
     expect(page.get_by_role("link",name="Register")).to_be_visible()
     time.sleep(5)
 
-@pytest.mark.dependency()
+@pytest.mark.order(1)
+@pytest.mark.dependency(name="register")
 def test_registration_Positive(page:Page):
     page.goto("http://127.0.0.1:5001/")
     with open('data/credentials.json') as f:
@@ -37,7 +38,8 @@ def test_registration_Positive(page:Page):
     page.get_by_role("button",name="Register").click()
     time.sleep(5)
 
-@pytest.mark.dependency(depends=["test_registration_Positive"])
+@pytest.mark.order(2)
+@pytest.mark.dependency(depends=["register"])
 def test_login_Page(page: Page):
     # Setup: Ensure the user exists for this specific test
     with open("data/credentials.json") as f:

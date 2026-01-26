@@ -77,9 +77,8 @@ pipeline {
                     sh '''
                       mkdir -p ../${REPORT_DIR}
                       # Ensure your tests use the BASE_URL env variable or localhost:5001
-                      pytest --junit-xml=../${REPORT_DIR}/junit.xml \
-                             --html=../${REPORT_DIR}/report.html \
-                             --self-contained-html
+                      pytest --html=../${REPORT_DIR}/report.html --self-contained-html --css=../${REPORT_DIR}/style.css
+
                     '''
                 }
             }
