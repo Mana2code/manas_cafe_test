@@ -2,7 +2,7 @@ pipeline {
     agent {
         docker {
             // Using the Playwright image directly is much faster as browsers are pre-installed
-            image '://mcr.microsoft.com'
+            image 'mcr.microsoft.com/playwright/python:v1.50.0-noble'
             args '-u root:root'
         }
     }
