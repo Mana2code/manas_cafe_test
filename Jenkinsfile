@@ -1,8 +1,9 @@
 pipeline {
     agent {
         docker {
-            image 'python:3.13'
-            args '-u root:root' // unbuffered output
+            // Using the Playwright image directly is much faster as browsers are pre-installed
+            image '://mcr.microsoft.com'
+            args '-u root:root'
         }
     }
 
@@ -11,39 +12,39 @@ pipeline {
         TEST_REPO_URL = 'https://github.com/Mana2code/manas_cafe_test.git'
         TEST_DIR      = 'tests_repo'
         REPORT_DIR    = 'reports'
+        // Point your tests to this URL
+        BASE_URL      = 'http://0.0.0.0:5001'
     }
 
     stages {
         stage('Checkout App') {
             steps {
-                checkout([$class: 'GitSCM',
-                          branches: [[name: '*/main']],
-                          userRemoteConfigs: [[url: env.APP_REPO_URL]]])
+                git url: env.APP_REPO_URL, branch: 'main'
             }
         }
 
         stage('Install App Dependencies') {
             steps {
-                sh '''
-                  python -m pip install --upgrade pip
-                  if [ -f requirements.txt ]; then
-                    pip install -r requirements.txt
-                  fi
-
-                '''
+                sh 'pip install --upgrade pip && pip install -r requirements.txt'
             }
         }
 
         stage('Run Flask App') {
             steps {
-                // Run Flask in background
                 sh '''
+                  # CRITICAL: Prevents Jenkins from killing the background process
+                  export JENKINS_NODE_COOKIE=dontKillMe
                   export FLASK_APP=app.py
-                  export FLASK_ENV=testing
-                  flask run --host=0.0.0.0 --port=5001 &
+
+                  # Start Flask and log output to troubleshoot if it fails
+                  nohup flask run --host=0.0.0.0 --port=5001 > flask.log 2>&1 &
                   echo $! > flask.pid
-                  # Give it a few seconds to start
-                  sleep 5
+
+                  # Wait for server to be ready
+                  sleep 10
+
+                  # Verification check: will fail the build if Flask didn't start
+                  curl -s http://0.0.0.0:5001 > /dev/null || (cat flask.log && exit 1)
                 '''
             }
         }
@@ -60,18 +61,11 @@ pipeline {
             steps {
                 dir(env.TEST_DIR) {
                     sh '''
-                      python -m pip install --upgrade pip
-                      # If tests have their own requirements
-                      if [ -f requirements.txt ]; then
-                        pip install -r requirements.txt
-                      fi
-                      # Ensure pytest is installed
-                      pip install pytest
-                      # Install browser binaries
+                      pip install -r requirements.txt || true
+                      pip install pytest pytest-html pytest-playwright
+                      # If using the playwright image, these are often already there,
+                      # but ensure the specific browser is available
                       playwright install chromium
-
-                      # Install system dependencies for the browsers (requires root)
-                      playwright install-deps
                     '''
                 }
             }
@@ -82,8 +76,10 @@ pipeline {
                 dir(env.TEST_DIR) {
                     sh '''
                       mkdir -p ../${REPORT_DIR}
-                      pytest --junit-xml=../reports/junit.xml --html=../reports/report.html --self-contained-html
-
+                      # Ensure your tests use the BASE_URL env variable or localhost:5001
+                      pytest --junit-xml=../${REPORT_DIR}/junit.xml \
+                             --html=../${REPORT_DIR}/report.html \
+                             --self-contained-html
                     '''
                 }
             }
@@ -92,14 +88,17 @@ pipeline {
 
     post {
         always {
-            // Stop Flask app if running
             sh '''
               if [ -f flask.pid ]; then
                 kill $(cat flask.pid) || true
+                rm flask.pid
               fi
             '''
-
             junit "${REPORT_DIR}/junit.xml"
+            // Allows students to view the pretty HTML report in Jenkins
+            publishHTML([allowMissing: false, alwaysLinkToLastBuild: true, keepAll: true,
+                         reportDir: "${REPORT_DIR}", reportFiles: 'report.html',
+                         reportName: 'Playwright HTML Report'])
         }
     }
 }
