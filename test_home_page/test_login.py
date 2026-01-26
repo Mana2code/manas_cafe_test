@@ -37,6 +37,8 @@ def test_login_Page(page: Page):
     timestamp = int(time.time())
     username = f"login_user_{timestamp}"
     page.goto("http://127.0.0.1:5001/")
+    page.get_by_role("link", name="Register").click()
+    expect(page.get_by_role("heading", name="Register")).to_be_visible()
     page.locator('input[name="username"]').fill(username)
     page.locator('input[name="password"]').fill("Testing@12")
     page.locator('input[name="confirm_password"]').fill("Testing@12")
@@ -44,6 +46,8 @@ def test_login_Page(page: Page):
     time.sleep(4)
     # Action: Perform Login
     page.goto("http://127.0.0.1:5001/")
+    page.get_by_role("link", name="Login").click()
+    expect(page.get_by_role("heading", name="Login")).to_be_visible()
     page.locator('input[name="username"]').fill(username)
     page.locator('input[name="password"]').fill("Testing@12")
     page.get_by_role("button", name="Login").click()
