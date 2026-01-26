@@ -72,7 +72,7 @@ pipeline {
             }
         }
 
-        stage('Run Tests') {
+        stage('Run Tests ') {
         steps {
             dir(env.TEST_DIR) {
                 sh '''
