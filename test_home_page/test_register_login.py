@@ -61,7 +61,7 @@ def test_login_Page(page: Page):
     page.locator('input[name="username"]').fill(userName)
     page.locator('input[name="password"]').fill(userPassword)
     page.get_by_role("button", name="Login").click()
-    time.sleep(4)
+    page.wait_for_load_state("networkidle")
     # Assert
     expect(page.get_by_text("Beverage Catalogue", exact=True)).to_be_visible()
 
