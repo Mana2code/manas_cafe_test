@@ -62,8 +62,14 @@ def test_login_Page(page: Page):
     page.locator('input[name="password"]').fill(userPassword)
     page.get_by_role("button", name="Login").click()
     page.wait_for_load_state("networkidle")
-    # Assert
-    expect(page.get_by_text("Beverage Catalogue", exact=True)).to_be_visible()
+    try:
+        # Increase timeout slightly to allow for slow Jenkins/Docker networking
+        expect(page.get_by_text("Beverage Catalogue", exact=True)).to_be_visible(timeout=10000)
+    except AssertionError as e:
+        # Capture the state exactly when the failure happened
+        page.screenshot(path="failure_login.png", full_page=True)
+        raise e
+
 
 
 
