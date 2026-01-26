@@ -72,17 +72,19 @@ pipeline {
         }
 
         stage('Run Tests') {
-            steps {
-                dir(env.TEST_DIR) {
-                    sh '''
-                      mkdir -p ../${REPORT_DIR}
-                      # Ensure your tests use the BASE_URL env variable or localhost:5001
-                      pytest --html=../${REPORT_DIR}/report.html --self-contained-html --css=../${REPORT_DIR}/style.css
-
-                    '''
-                }
+        steps {
+            dir(env.TEST_DIR) {
+                sh '''
+                  mkdir -p ../${REPORT_DIR}
+                  # Removed the --css flag to prevent the OSError
+                  pytest --junit-xml=../${REPORT_DIR}/junit.xml \
+                         --html=../${REPORT_DIR}/report.html \
+                         --self-contained-html
+                '''
             }
         }
+}
+
     }
 
     post {
