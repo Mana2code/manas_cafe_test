@@ -51,7 +51,7 @@ def test_login_Page(page: Page):
     page.locator('input[name="username"]').fill(username)
     page.locator('input[name="password"]').fill("Testing@12")
     page.get_by_role("button", name="Login").click()
-
+    time.sleep(4)
     # Assert
     expect(page.get_by_text("Beverage Catalogue", exact=True)).to_be_visible()
 
