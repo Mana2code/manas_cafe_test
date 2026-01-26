@@ -11,11 +11,13 @@ pipeline {
         TEST_REPO_URL = 'https://github.com/Mana2code/manas_cafe_test.git'
         TEST_DIR      = 'tests_repo'
         REPORT_DIR    = 'reports'
-        BASE_URL      = 'http://0.0.0.0:5001'
+        BASE_URL      = 'http://127.0.0.1:5001'
+        FLASK_ENV     = 'testing'
     }
 
     stages {
-        stage('Checkout App') {
+
+        stage('Checkout Application') {
             steps {
                 git url: env.APP_REPO_URL, branch: 'main'
             }
@@ -23,25 +25,33 @@ pipeline {
 
         stage('Install App Dependencies') {
             steps {
-                sh 'pip install --upgrade pip && pip install -r requirements.txt'
+                sh '''
+                    python -m pip install --upgrade pip
+                    pip install -r requirements.txt
+                '''
             }
         }
 
-        stage('Run Flask App') {
+        stage('Initialize & Run App') {
             steps {
                 sh '''
-                  export JENKINS_NODE_COOKIE=dontKillMe
-                  export FLASK_APP=app.py
-                  python3 -c "from app import app, init_db; init_db()"
-                  nohup flask run --host=0.0.0.0 --port=5001 > flask.log 2>&1 &
-                  echo $! > flask.pid
-                  sleep 10
+                    export JENKINS_NODE_COOKIE=dontKillMe
+                    export FLASK_APP=app.py
+
+                    python -c "from app import init_db; init_db()"
+
+                    nohup flask run --host=0.0.0.0 --port=5001 > flask.log 2>&1 &
+                    echo $! > flask.pid
+
+                    echo "Waiting for Flask to start..."
+                    sleep 10
                 '''
             }
         }
 
         stage('Checkout Tests') {
             steps {
+                sh "mkdir -p ${TEST_DIR}"
                 dir(env.TEST_DIR) {
                     git url: env.TEST_REPO_URL, branch: 'main'
                 }
@@ -52,44 +62,59 @@ pipeline {
             steps {
                 dir(env.TEST_DIR) {
                     sh '''
-                      pip install -r requirements.txt || true
-                      pip install pytest pytest-html pytest-playwright
-                      playwright install chromium
+                        pip install -r requirements.txt
+                        pip install pytest pytest-html pytest-playwright
+                        playwright install chromium
                     '''
                 }
             }
         }
 
-        stage('Run Tests') {
+        stage('Run Integration & Regression Tests') {
             steps {
+                sh "mkdir -p ${REPORT_DIR}"
                 dir(env.TEST_DIR) {
                     sh '''
-                      mkdir -p ../${REPORT_DIR}
-                      pytest --junit-xml=../${REPORT_DIR}/junit.xml \
-                             --html=../${REPORT_DIR}/report.html \
-                             --self-contained-html \
-                             --screenshot=only-on-failure \
-                             --output=../${REPORT_DIR}/test-results
+                        pytest \
+                          --junit-xml=../${REPORT_DIR}/junit.xml \
+                          --html=../${REPORT_DIR}/report.html \
+                          --self-contained-html
                     '''
                 }
             }
         }
-    } // End of stages block (This was missing)
+    }
 
     post {
         always {
-            // In Declarative Pipeline with a top-level agent,
-            // post actions run inside that same agent context.
-            sh '''
-              if [ -f flask.pid ]; then
-                kill $(cat flask.pid) || true
-                rm flask.pid
-              fi
-            '''
-            junit "${REPORT_DIR}/junit.xml"
-            publishHTML([allowMissing: false, alwaysLinkToLastBuild: true, keepAll: true,
-                         reportDir: "${REPORT_DIR}", reportFiles: 'report.html',
-                         reportName: 'Playwright HTML Report'])
+            script {
+                if (fileExists('flask.pid')) {
+                    sh '''
+                        kill $(cat flask.pid) || true
+                        rm -f flask.pid
+                    '''
+                }
+            }
+
+            junit allowEmptyResults: true, testResults: "${REPORT_DIR}/junit.xml"
+
+            publishHTML([
+                allowMissing: true,
+                alwaysLinkToLastBuild: true,
+                keepAll: true,
+                reportDir: "${REPORT_DIR}",
+                reportFiles: 'report.html',
+                reportName: 'Playwright Test Report'
+            ])
+        }
+
+        failure {
+            echo '❌ Build failed. Check logs and test reports.'
+        }
+
+        success {
+            echo '✅ Build and tests completed successfully.'
         }
     }
 }
+
