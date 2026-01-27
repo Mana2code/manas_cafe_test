@@ -42,7 +42,21 @@ def test_logout_Page(page: Page):
         page.get_by_role("link", name="Cart").click()
         page.get_by_role("link", name="Checkout").click()
         #expect(page.locator(".table table-bordered tr")).to_have_count(3)
-        time.sleep(2)
+
+        with open("data/carddetails.json")as f:
+
+            cards= json.load(f)
+
+        page.get_by_placeholder("Enter card number").fill(cards["card_details"]["cardNumber"])
+        page.get_by_placeholder("MM/YY").fill(cards["card_details"]["expiry"])
+        page.locator('input[name="cvv"]').fill(cards["card_details"]["cvv"])
+        page.get_by_role("button", name="Checkout").click()
+        expect(page.get_by_text("My Orders")).to_be_visible()
+        time.sleep(5)
+
+
+
+
 
 
 
