@@ -1,3 +1,4 @@
+
 pipeline {
     agent {
         docker {
@@ -13,6 +14,12 @@ pipeline {
         REPORT_DIR    = 'reports'
         BASE_URL      = 'http://127.0.0.1:5001'
         FLASK_ENV     = 'testing'
+        PYTHONUNBUFFERED = '1'
+    }
+
+    options {
+        timestamps()
+        disableConcurrentBuilds()
     }
 
     stages {
@@ -23,7 +30,7 @@ pipeline {
             }
         }
 
-        stage('Install App Dependencies') {
+        stage('Install Application Dependencies') {
             steps {
                 sh '''
                     python -m pip install --upgrade pip
@@ -32,7 +39,7 @@ pipeline {
             }
         }
 
-        stage('Initialize & Run App') {
+        stage('Initialize & Start Flask App') {
             steps {
                 sh '''
                     export JENKINS_NODE_COOKIE=dontKillMe
@@ -49,7 +56,7 @@ pipeline {
             }
         }
 
-        stage('Checkout Tests') {
+        stage('Checkout Test Repository') {
             steps {
                 sh "mkdir -p ${TEST_DIR}"
                 dir(env.TEST_DIR) {
@@ -108,13 +115,12 @@ pipeline {
             ])
         }
 
-        failure {
-            echo '❌ Build failed. Check logs and test reports.'
+        success {
+            echo '✅ CI pipeline completed successfully.'
         }
 
-        success {
-            echo '✅ Build and tests completed successfully.'
+        failure {
+            echo '❌ CI pipeline failed. Check logs and reports.'
         }
     }
 }
-
