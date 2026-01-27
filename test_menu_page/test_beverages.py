@@ -52,6 +52,8 @@ def test_logout_Page(page: Page):
         page.locator('input[name="cvv"]').fill(cards["card_details"]["cvv"])
         page.get_by_role("button", name="Checkout").click()
         expect(page.get_by_text("My Orders")).to_be_visible()
+        page.get_by_role("link", name="Logout").click()
+        expect(page.get_by_text("Welcome to Mana's Cafe ☕")).to_be_visible()
         time.sleep(5)
 
 
