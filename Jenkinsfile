@@ -78,7 +78,7 @@ pipeline {
                 dir(env.TEST_DIR) {
                     // Targets only the home page test file
                     sh '''
-                        pytest manas_cafe_test/test_home_page.py \
+                        pytest manas_cafe_test/test_home_page/ \
                           --junit-xml=../${REPORT_DIR}/home_junit.xml \
                           --html=../${REPORT_DIR}/home_report.html \
                           --self-contained-html
@@ -92,7 +92,7 @@ pipeline {
                 dir(env.TEST_DIR) {
                     // Targets only the menu page test file
                     sh '''
-                        pytest manas_cafe_test/test_menu_page.py \
+                        pytest manas_cafe_test/test_menu_page/ \
                           --junit-xml=../${REPORT_DIR}/menu_junit.xml \
                           --html=../${REPORT_DIR}/menu_report.html \
                           --self-contained-html
