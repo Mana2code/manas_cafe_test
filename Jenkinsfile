@@ -23,7 +23,6 @@ pipeline {
     }
 
     stages {
-
         stage('Checkout Application') {
             steps {
                 git url: env.APP_REPO_URL, branch: 'main'
@@ -44,13 +43,9 @@ pipeline {
                 sh '''
                     export JENKINS_NODE_COOKIE=dontKillMe
                     export FLASK_APP=app.py
-
                     python -c "from app import init_db; init_db()"
-
                     nohup flask run --host=0.0.0.0 --port=5001 > flask.log 2>&1 &
                     echo $! > flask.pid
-
-                    echo "Waiting for Flask to start..."
                     sleep 10
                 '''
             }
@@ -77,14 +72,29 @@ pipeline {
             }
         }
 
-        stage('Run Integration & Regression Tests') {
+        stage('Home Page Tests') {
             steps {
                 sh "mkdir -p ${REPORT_DIR}"
                 dir(env.TEST_DIR) {
+                    // Targets only the home page test file
                     sh '''
-                        pytest \
-                          --junit-xml=../${REPORT_DIR}/junit.xml \
-                          --html=../${REPORT_DIR}/report.html \
+                        pytest manas_cafe_test/test_home_page.py \
+                          --junit-xml=../${REPORT_DIR}/home_junit.xml \
+                          --html=../${REPORT_DIR}/home_report.html \
+                          --self-contained-html
+                    '''
+                }
+            }
+        }
+
+        stage('Menu Page Tests') {
+            steps {
+                dir(env.TEST_DIR) {
+                    // Targets only the menu page test file
+                    sh '''
+                        pytest manas_cafe_test/test_menu_page.py \
+                          --junit-xml=../${REPORT_DIR}/menu_junit.xml \
+                          --html=../${REPORT_DIR}/menu_report.html \
                           --self-contained-html
                     '''
                 }
@@ -96,31 +106,21 @@ pipeline {
         always {
             script {
                 if (fileExists('flask.pid')) {
-                    sh '''
-                        kill $(cat flask.pid) || true
-                        rm -f flask.pid
-                    '''
+                    sh 'kill $(cat flask.pid) || true'
                 }
             }
 
-            junit allowEmptyResults: true, testResults: "${REPORT_DIR}/junit.xml"
+            // Aggregate results from both stages using wildcards
+            junit allowEmptyResults: true, testResults: "${REPORT_DIR}/*_junit.xml"
 
             publishHTML([
                 allowMissing: true,
                 alwaysLinkToLastBuild: true,
                 keepAll: true,
                 reportDir: "${REPORT_DIR}",
-                reportFiles: 'report.html',
-                reportName: 'Playwright Test Report'
+                reportFiles: 'home_report.html, menu_report.html',
+                reportName: 'Playwright Test Reports'
             ])
-        }
-
-        success {
-            echo '✅ CI pipeline completed successfully.'
-        }
-
-        failure {
-            echo '❌ CI pipeline failed. Check logs and reports.'
         }
     }
 }
