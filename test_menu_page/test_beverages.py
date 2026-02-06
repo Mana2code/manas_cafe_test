@@ -21,7 +21,7 @@ def test_login_Page(page: Page):
 
         page.get_by_role("button",name="Login").click()
 
-def test_logout_Page(page: Page):
+def test_logout_Page(page: login):
     page.goto("http://127.0.0.1:5001/")
     with open("data/credentials.json") as f:
         test_data = json.load(f)
