@@ -4,6 +4,8 @@ import pytest
 
 from playwright.sync_api import Page, expect
 
+from conftest import user_credentials
+
 
 def test_homepage(page:Page):
     page.goto("http://127.0.0.1:5001/")
@@ -28,15 +30,15 @@ def test_registration_Positive(page:Page):
     page.goto("http://127.0.0.1:5001/")
     with open('data/credentials.json') as f:
         test_data = json.load(f)
-        user_credentials_list = test_data("user_credentials")
+        #user_credentials_list = test_data("user_credentials")
 
     #timestamp = int(time.time())
     #username = f"register_user_{timestamp}"
     page.get_by_role("link",name="Register").click()
     expect(page.get_by_role("heading",name="Register")).to_be_visible()
-    page.locator('input[name="username"]').fill(test_data["user_crendentials"]["userName"])
-    page.locator('input[name="password"]').fill(test_data["user_crendentials"].get("userPassword"))
-    page.locator('input[name="confirm_password"]').fill(test_data["user_crendentials"].get("userPassword"))
+    page.locator('input[name="username"]').fill(test_data["user_credentials"]["userName"])
+    page.locator('input[name="password"]').fill(test_data["user_credentials"].get("userPassword"))
+    page.locator('input[name="confirm_password"]').fill(test_data["user_credentials"].get("userPassword"))
     page.get_by_role("button",name="Register").click()
     time.sleep(5)
 
@@ -47,8 +49,8 @@ def test_login_Page(page: Page):
     with open("data/credentials.json") as f:
         test_data=json.load(f)
 
-    userName=test_data["user_crendentials"]["userName"]
-    userPassword=test_data["user_crendentials"]["userPassword"]
+    userName=test_data["user_credentials"]["userName"]
+    userPassword=test_data["user_credentials"]["userPassword"]
 
 
 
