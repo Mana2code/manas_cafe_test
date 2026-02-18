@@ -1,10 +1,12 @@
 import json
+import time
 
 from playwright.sync_api import expect
 
 
 def test_loginPage(page,login):
     expect(page.get_by_text("Beverage Catalogue")).to_be_visible()
+
 
 def test_logoutPage(page,login):
     #expect(page.get_by_text("Beverage Catalogue")).to_be_visible()
@@ -14,6 +16,7 @@ def test_logoutPage(page,login):
     latteTest.get_by_role("button", name="Add to Cart").click()
     page.get_by_role("link", name="Cart").click()
     page.get_by_role("link", name="Checkout").click()
+    time.sleep(5)
     with open("data/carddetails.json") as f:
         cards = json.load(f)
 
@@ -24,6 +27,7 @@ def test_logoutPage(page,login):
     expect(page.get_by_text("My Orders")).to_be_visible()
     page.get_by_role("link", name="Logout").click()
     expect(page.get_by_text("Welcome to Mana's Cafe ☕")).to_be_visible()
+    time.sleep(5)
 
 
 

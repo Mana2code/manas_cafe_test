@@ -28,6 +28,8 @@ def test_registration_Positive(page:Page):
     page.goto("http://127.0.0.1:5001/")
     with open('data/credentials.json') as f:
         test_data = json.load(f)
+        user_credentials_list = test_data("user_credentials")
+
     #timestamp = int(time.time())
     #username = f"register_user_{timestamp}"
     page.get_by_role("link",name="Register").click()
